@@ -93,10 +93,26 @@ public class SettingsManager : MonoBehaviour
         ApplyAudioVolumes();
     }
 
+    public AudioClip sfxPreviewClip;    // assign a short SFX preview in inspector
+    private float lastSfxPreviewTime = 0f;
+    public float sfxPreviewCooldown = 0.1f; // seconds, prevents spamming
+
+    // modify SetSfxVolume or add this helper near ApplyAudioVolumes:
+
     public void SetSfxVolume(float sfxValue)
     {
         PlayerPrefs.SetFloat(PREF_SFX, sfxValue);
         ApplyAudioVolumes();
+
+        // play preview (but limit frequency so it doesn't spam)
+        if (sfxPreviewClip != null && sfxSource != null)
+        {
+            if (Time.unscaledTime - lastSfxPreviewTime > sfxPreviewCooldown)
+            {
+                sfxSource.PlayOneShot(sfxPreviewClip, Mathf.Clamp01((masterSlider != null ? masterSlider.value : 1f) * sfxValue));
+                lastSfxPreviewTime = Time.unscaledTime;
+            }
+        }
     }
 
     // Applies current slider values to the AudioSources
