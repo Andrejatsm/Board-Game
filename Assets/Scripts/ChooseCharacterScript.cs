@@ -10,6 +10,7 @@ public class ChooseCharacterScript : MonoBehaviour
     string characterName;
     public int playerCount = 2;
     public SceneChanger sceneChanger;
+    public SaveLoadScript saveLoadScript;
 
     private void Awake()
     {
@@ -52,7 +53,7 @@ public class ChooseCharacterScript : MonoBehaviour
             PlayerPrefs.SetInt("SelectedCharacter", characterIndex);
             PlayerPrefs.SetString("PlayerName", characterName);
             PlayerPrefs.SetInt("PlayerCount", playerCount);
-            //StartCoroutine(sceneChanger.Delay("play"), characterIndex, characterName);
+            StartCoroutine(sceneChanger.Delay("play", characterIndex, characterName));
         }else
         {
             inputField.GetComponent<TMPro.TMP_InputField>().Select();

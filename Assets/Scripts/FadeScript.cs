@@ -15,7 +15,7 @@ public class FadeScript : MonoBehaviour
     }
 
     // Update is called once per frame
-    IEnumerator FadeIn(float fadeSpeed)
+    public IEnumerator FadeIn(float fadeSpeed)
     {
         for (float a = 1f; a >= -0.05; a -= 0.05f)
         {
@@ -26,7 +26,7 @@ public class FadeScript : MonoBehaviour
         }
         img.raycastTarget = false;
     }
-    IEnumerator FadeOut(float fadeSpeed)
+    public IEnumerator FadeOut(float fadeSpeed)
     {
         for (float a = 0f; a <= 1.05f; a += 0.05f)
         {
