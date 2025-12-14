@@ -189,7 +189,7 @@ GameObject:
   - component: {fileID: 5322800040480825275}
   - component: {fileID: 8014670490250537551}
   m_Layer: 0
-  m_Name: EvilManPlayer 1
+  m_Name: EvilManPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -203,14 +203,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7051980116583193016}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 861.5, y: 532.29, z: 1101.5}
-  m_LocalScale: {x: 3.8195, y: 3.7224998, z: 5}
+  m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6766125862936670334}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1355943466210647646
 SpriteRenderer:
   m_ObjectHideFlags: 0

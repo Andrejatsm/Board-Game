@@ -1,79 +1,109 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
- 
+
 public class DiceRollScript : MonoBehaviour
 {
-    Rigidbody rBody;
-    Vector3 position, startPosition;
-    [SerializeField] private float maxRandForceVal, startRollingForce;
-    float forceX, forceY, forceZ;
-    public string diceFaceNum;
+    private Rigidbody rBody;
+    private Vector3 startPosition;
+
+    [Header("Roll Forces")]
+    [SerializeField] private float maxRandForceVal = 10f;
+    [SerializeField] private float startRollingForce = 8f; // reduced to reasonable impulse magnitude
+
+    [Header("State")]
     public bool isLanded = false;
-    public bool firstThrow = false;
- 
+    public int rolledValue = 0;
+    public string diceFaceNum = null; // set by SideDetectScript (collider name)
+
+    private bool isRolling = false;
+
     void Awake()
     {
-        startPosition = transform.position;
-        Initialize();
-    }
- 
-    private void Initialize()
-    {
         rBody = GetComponent<Rigidbody>();
-        rBody.isKinematic = true;
-        position = transform.position;
-        transform.rotation = new Quaternion(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360), 0);
+        startPosition = transform.position;
+        ResetDice();
     }
- 
-    private void RollDice()
+
+    // Called by TurnManager
+    public void Roll()
     {
+        if (isRolling) return;
+
+        ResetDice();
+
+        isRolling = true;
+        isLanded = false;
+        rolledValue = 0;
+        diceFaceNum = null;
+
         rBody.isKinematic = false;
-        forceX = Random.Range(0, maxRandForceVal);
-        forceY = Random.Range(0, maxRandForceVal);
-        forceZ = Random.Range(0, maxRandForceVal);
-        rBody.AddForce(Vector3.up*Random.Range(800, startRollingForce));
-        rBody.AddTorque(forceX, forceY, forceZ);
+
+        Vector3 torque = new Vector3(
+            Random.Range(-maxRandForceVal, maxRandForceVal),
+            Random.Range(-maxRandForceVal, maxRandForceVal),
+            Random.Range(-maxRandForceVal, maxRandForceVal)
+        );
+
+        // Apply an upward impulse plus torque
+        rBody.AddForce(Vector3.up * Random.Range(startRollingForce * 0.8f, startRollingForce), ForceMode.Impulse);
+        rBody.AddTorque(torque, ForceMode.Impulse);
     }
- 
+
+    void FixedUpdate()
+    {
+        if (!isRolling) return;
+
+        // Use Rigidbody.velocity / angularVelocity (Unity API)
+        if (rBody.linearVelocity.sqrMagnitude < 0.05f && rBody.angularVelocity.sqrMagnitude < 0.05f)
+        {
+            // Let SideDetectScript assign diceFaceNum if present; otherwise fall back
+            DetermineFaceValue();
+            isRolling = false;
+            isLanded = true;
+            rBody.isKinematic = true;
+        }
+    }
+
+    void DetermineFaceValue()
+    {
+        // If a side detector has set a collider name that can be parsed to an int, prefer it.
+        if (!string.IsNullOrEmpty(diceFaceNum))
+        {
+            // Try to parse numeric names (e.g. "1", "3"), otherwise strip non-digits
+            if (int.TryParse(diceFaceNum, out int parsed))
+            {
+                rolledValue = Mathf.Clamp(parsed, 1, 6);
+                Debug.Log("Dice landed on (from collider name): " + rolledValue);
+                return;
+            }
+
+            // Try to extract digits from the name (e.g. "Side_4")
+            string digits = System.Text.RegularExpressions.Regex.Match(diceFaceNum, @"\d+").Value;
+            if (!string.IsNullOrEmpty(digits) && int.TryParse(digits, out parsed))
+            {
+                rolledValue = Mathf.Clamp(parsed, 1, 6);
+                Debug.Log("Dice landed on (from collider name digits): " + rolledValue);
+                return;
+            }
+
+            // If the collider name is non-numeric, leave rolledValue determination to fallback
+            Debug.Log("Collider name provided but not numeric: " + diceFaceNum);
+        }
+
+        // Fallback: simple random result
+        rolledValue = Random.Range(1, 7);
+        Debug.Log("Dice landed on (fallback random): " + rolledValue);
+    }
+
     public void ResetDice()
     {
+        rBody.isKinematic = true;
         transform.position = startPosition;
-        firstThrow = false;
+        transform.rotation = Random.rotation;
+
         isLanded = false;
-        Initialize();
+        isRolling = false;
+        rolledValue = 0;
+        diceFaceNum = null;
     }
- 
- 
- 
-    void Update()
-    {
-       if(rBody != null)
-        {
-            if(Input.GetMouseButtonDown(0) && isLanded ||Input.GetMouseButtonDown(0) && !firstThrow)
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit))
-                {
-                    if(hit.collider != null && hit.collider.gameObject == this.gameObject)
-                    {
-                        if (!firstThrow)
-                        {
-                            firstThrow = true;
-                        }
-                        RollDice();
-                    }
-                }
- 
-                    firstThrow = true;
-                isLanded = false;
-                RollDice();
-            }
-        } 
-    }
- 
- 
- 
- 
 }
