@@ -188,6 +188,7 @@ GameObject:
   - component: {fileID: 3213446236040923429}
   - component: {fileID: 5752967996308331053}
   - component: {fileID: 8067033895889514604}
+  - component: {fileID: 5820411437212049396}
   m_Layer: 0
   m_Name: FallenAngelPlayer2
   m_TagString: Untagged
@@ -300,3 +301,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02c9bbbf9d36f01429349add108af399, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5820411437212049396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3624296075450079580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f4d3ba260d3be4495ec10916e3bea6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentTileIndex: 0
+  moveSpeed: 6
+  heightOffset: 2
+  moveAnimationParameter: Walk

@@ -3,35 +3,42 @@ using UnityEngine;
 public class GameCamera : MonoBehaviour
 {
     public Transform target;
-    public Vector3 normalOffset = new Vector3(0, 12, -12);
-    public Vector3 zoomOffset = new Vector3(0, 6, -6);
 
-    public float moveSpeed = 4f;
+    [Header("Camera Offsets")]
+    public Vector3 playerOffset = new Vector3(0, 18, -18); // High angle for player
+    public Vector3 diceOffset = new Vector3(0, 10, -10);   // Closer angle for dice
+
+    public float moveSpeed = 5f;
     private Vector3 currentOffset;
 
     void Start()
     {
-        currentOffset = normalOffset;
+        currentOffset = playerOffset;
     }
 
     void LateUpdate()
     {
         if (target == null) return;
 
-        Vector3 desired = target.position + currentOffset;
-        transform.position = Vector3.Lerp(transform.position, desired, Time.deltaTime * moveSpeed);
+        // Smoothly move to position
+        Vector3 desiredPosition = target.position + currentOffset;
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * moveSpeed);
+
+        // Always look at the target
         transform.LookAt(target);
     }
 
-    public void SetTarget(Transform t)
+    // Call this when it's a player's turn
+    public void FocusOnPlayer(Transform playerTransform)
     {
-        target = t;
-        currentOffset = normalOffset;
+        target = playerTransform;
+        currentOffset = playerOffset;
     }
 
-    public void FocusOnPlayer(Transform t)
+    // Call this when the dice is rolling
+    public void FocusOnDice(Transform diceTransform)
     {
-        target = t;
-        currentOffset = zoomOffset;
+        target = diceTransform;
+        currentOffset = diceOffset;
     }
 }

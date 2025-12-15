@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5567912228797535764}
   - component: {fileID: 1975447615820781003}
   - component: {fileID: 132657837575019201}
+  - component: {fileID: -3774425768629008442}
   m_Layer: 0
   m_Name: Warrior1Player
   m_TagString: Untagged
@@ -124,6 +125,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02c9bbbf9d36f01429349add108af399, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-3774425768629008442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4704560336848693496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f4d3ba260d3be4495ec10916e3bea6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentTileIndex: 0
+  moveSpeed: 6
+  heightOffset: 2
+  moveAnimationParameter: Walk
 --- !u!1 &9182088001677368264
 GameObject:
   m_ObjectHideFlags: 0

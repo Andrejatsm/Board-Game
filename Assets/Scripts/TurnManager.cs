@@ -11,12 +11,6 @@ public class TurnManager : MonoBehaviour
     private int currentPlayer = 0;
     private bool isBusy = false;
 
-    void Start()
-    {
-        if (players != null && players.Length > 0 && cam != null)
-            cam.SetTarget(players[currentPlayer].transform);
-    }
-
     public void RollDiceButton()
     {
         if (isBusy) return;
@@ -25,33 +19,100 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator TakeTurn()
     {
-        if (players == null || players.Length == 0 || dice == null || cam == null)
-        {
-            Debug.LogWarning("TurnManager missing references (players, dice or cam). Assign them in the Inspector.");
-            yield break;
-        }
+        if (players == null || players.Length == 0) yield break;
 
         isBusy = true;
-
         PlayerController player = players[currentPlayer];
 
-        cam.FocusOnPlayer(player.transform);
+        // 1. CAMERA: Focus on Dice
+        if (cam != null) cam.FocusOnDice(dice.transform);
 
+        // 2. Roll Dice
+        dice.ResetDice();
+        yield return new WaitForSeconds(0.2f);
         dice.Roll();
 
-        // wait until dice lands (set by DiceRollScript / SideDetectScript)
+        // 3. Wait for landing
         yield return new WaitUntil(() => dice.isLanded);
 
-        int roll = dice.rolledValue;
+        // 4. Get Number
+        int steps = 0;
+        int.TryParse(dice.diceFaceNum, out steps);
 
-        // Player.MoveSteps expected to be a coroutine returning IEnumerator
-        if (player != null)
-            yield return StartCoroutine(player.MoveSteps(board, roll));
-
+        // 5. CAMERA: Focus back on Player
         yield return new WaitForSeconds(0.5f);
+        if (cam != null) cam.FocusOnPlayer(player.transform);
 
-        NextPlayer();
-        isBusy = false;
+        // 6. Move Player (Walking)
+        if (player != null)
+        {
+            yield return StartCoroutine(player.MoveSteps(board, steps));
+        }
+
+        // --- NEW: CHECK FOR SPECIAL TILE ---
+        yield return new WaitForSeconds(0.2f); // Slight pause before effect happens
+        yield return StartCoroutine(CheckTileEffect(player));
+
+        // 7. Next Turn (Only if game isn't over)
+        if (!isGameOver)
+        {
+            NextPlayer();
+            isBusy = false;
+        }
+    }
+
+    // Flag to stop turns if someone wins
+    private bool isGameOver = false;
+
+    IEnumerator CheckTileEffect(PlayerController player)
+    {
+        // Get the tile the player is currently standing on
+        Transform tileTransform = board.GetTile(player.currentTileIndex);
+        TileScript tileData = tileTransform.GetComponent<TileScript>();
+
+        if (tileData != null)
+        {
+            switch (tileData.type)
+            {
+                case TileType.Win:
+                    Debug.Log($"<color=green>PLAYER {currentPlayer} WINS!</color>");
+                    isGameOver = true;
+                    // TODO: Activate your Win Screen UI GameObject here
+                    break;
+
+                case TileType.Trap:
+                    Debug.Log("Oh no! A Trap!");
+                    // Calculate new position (Current - Amount)
+                    int trapTarget = player.currentTileIndex - tileData.effectAmount;
+                    yield return StartCoroutine(player.SlideToTile(board, trapTarget));
+                    break;
+
+                case TileType.Boost:
+                    Debug.Log("Yay! A Boost!");
+                    // Calculate new position (Current + Amount)
+                    int boostTarget = player.currentTileIndex + tileData.effectAmount;
+                    yield return StartCoroutine(player.SlideToTile(board, boostTarget));
+                    break;
+
+                case TileType.BackToStart:
+                    Debug.Log("Ouch! Back to start!");
+                    yield return StartCoroutine(player.SlideToTile(board, 0));
+                    break;
+
+                case TileType.Normal:
+                case TileType.Start:
+                default:
+                    // Do nothing
+                    break;
+            }
+        }
+    }
+
+    public void InitializePlayers(PlayerController[] allPlayers)
+    {
+        this.players = allPlayers;
+        currentPlayer = 0;
+        if (players.Length > 0 && cam != null) cam.FocusOnPlayer(players[0].transform);
     }
 
     void NextPlayer()
@@ -61,6 +122,6 @@ public class TurnManager : MonoBehaviour
             currentPlayer = 0;
 
         if (players != null && players.Length > 0 && cam != null)
-            cam.SetTarget(players[currentPlayer].transform);
+            cam.FocusOnPlayer(players[currentPlayer].transform);
     }
 }

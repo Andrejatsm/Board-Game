@@ -188,6 +188,7 @@ GameObject:
   - component: {fileID: 1355943466210647646}
   - component: {fileID: 5322800040480825275}
   - component: {fileID: 8014670490250537551}
+  - component: {fileID: 8302498901008977109}
   m_Layer: 0
   m_Name: EvilManPlayer
   m_TagString: Untagged
@@ -300,3 +301,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02c9bbbf9d36f01429349add108af399, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8302498901008977109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7051980116583193016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f4d3ba260d3be4495ec10916e3bea6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentTileIndex: 0
+  moveSpeed: 6
+  heightOffset: 2
+  moveAnimationParameter: Walk
