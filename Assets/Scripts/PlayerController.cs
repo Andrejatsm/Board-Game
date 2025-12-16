@@ -6,22 +6,25 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public int currentTileIndex = 0;
     public float moveSpeed = 3f;
-
-    // How high ABOVE the tile surface to float
     public float heightOffset = 1.0f;
 
     [Header("Animation Settings")]
     public string moveAnimationParameter = "Walk";
+    public string deathAnimationParameter = "Die"; 
+    
+    // NEW: Add the name of your Idle bool here (e.g. "Idle" or "OrcIdle")
+    public string idleAnimationParameter = "Idle"; 
 
     private Animator anim;
     private Rigidbody rb;
+    private SpriteRenderer spriteRenderer; 
 
     void Awake()
     {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
+        spriteRenderer = GetComponent<SpriteRenderer>(); 
 
-        // Disable physics gravity so code has 100% control
         if (rb != null)
         {
             rb.isKinematic = true;
@@ -31,76 +34,117 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator MoveSteps(Board board, int steps)
     {
-        if (anim != null) anim.SetBool(moveAnimationParameter, true);
+        // Ensure Idle is false when we start walking
+        if (anim != null) 
+        {
+            anim.SetBool(idleAnimationParameter, false);
+            anim.SetBool(moveAnimationParameter, true);
+        }
 
         for (int i = 0; i < steps; i++)
         {
             currentTileIndex++;
+            if (currentTileIndex >= board.TileCount) currentTileIndex = board.TileCount - 1;
 
-            // Safety Check
-            if (currentTileIndex >= board.TileCount)
-                currentTileIndex = board.TileCount - 1;
-
-            // 1. Get the Tile
             Transform targetTile = board.GetTile(currentTileIndex);
-
-            // 2. Calculate Target Position
-            // We take the tile's position and ADD the offset to the Y axis.
             Vector3 targetPos = targetTile.position;
             targetPos.y += heightOffset;
 
-            // 3. Move Loop
             while (Vector3.Distance(transform.position, targetPos) > 0.05f)
             {
-                transform.position = Vector3.MoveTowards(
-                    transform.position,
-                    targetPos,
-                    moveSpeed * Time.deltaTime
-                );
+                transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
                 yield return null;
             }
-
             yield return new WaitForSeconds(0.15f);
         }
 
-        if (anim != null) anim.SetBool(moveAnimationParameter, false);
+        if (anim != null) 
+        {
+            anim.SetBool(moveAnimationParameter, false);
+            // Return to Idle
+            anim.SetBool(idleAnimationParameter, true);
+        }
     }
 
-
-    // NEW FUNCTION: Moves player directly to a specific tile (Sliding effect)
     public IEnumerator SlideToTile(Board board, int targetIndex)
     {
-        // --- START ANIMATION ---
-        if (anim != null) anim.SetBool(moveAnimationParameter, true);
+        if (anim != null) 
+        {
+            anim.SetBool(idleAnimationParameter, false);
+            anim.SetBool(moveAnimationParameter, true);
+        }
 
-        // 1. Update Logic
         currentTileIndex = targetIndex;
-
-        // Clamp to ensure we don't go out of bounds
         if (currentTileIndex < 0) currentTileIndex = 0;
         if (currentTileIndex >= board.TileCount) currentTileIndex = board.TileCount - 1;
 
-        // 2. Get Visual Target
         Transform targetTile = board.GetTile(currentTileIndex);
-
-        // Use your relative height offset logic
         Vector3 targetPos = targetTile.position;
         targetPos.y += heightOffset;
 
-        // 3. Move Smoothly (Faster than walking)
         float slideSpeed = moveSpeed * 2f;
 
         while (Vector3.Distance(transform.position, targetPos) > 0.05f)
         {
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                targetPos,
-                slideSpeed * Time.deltaTime
-            );
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, slideSpeed * Time.deltaTime);
             yield return null;
         }
 
-        // --- STOP ANIMATION ---
-        if (anim != null) anim.SetBool(moveAnimationParameter, false);
+        if (anim != null) 
+        {
+            anim.SetBool(moveAnimationParameter, false);
+            anim.SetBool(idleAnimationParameter, true);
+        }
+    }
+
+    // --- UPDATED DEATH SEQUENCE ---
+    public IEnumerator DeathAndRespawn(Board board)
+    {
+        if (anim != null) 
+        {
+            // 1. Slow down the animation so it's not too fast (0.5 = Half Speed)
+            anim.speed = 0.5f;
+            
+            // Turn off other states to be safe
+            anim.SetBool(idleAnimationParameter, false);
+            anim.SetBool(moveAnimationParameter, false);
+            
+            // Trigger the Death
+            anim.SetTrigger(deathAnimationParameter);
+        }
+
+        // 2. Wait LONGER so the animation has time to finish (2 seconds)
+        yield return new WaitForSeconds(2.0f);
+
+        // 3. Hide Player
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
+
+        // Reset speed to normal while invisible
+        if (anim != null) anim.speed = 1.0f;
+
+        // 4. Teleport to Start
+        currentTileIndex = 0; 
+        Vector3 startPos = board.GetTile(0).position;
+        startPos.y += heightOffset;
+        transform.position = startPos;
+
+        // 5. Wait invisible (Respawn time)
+        yield return new WaitForSeconds(1.0f);
+
+        // 6. Show Player
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
+        
+        // 7. FIX: Force the "Idle" bool to True so it transitions out of Death
+        if (anim != null) 
+        {
+            // Reset the Die trigger just in case
+            anim.ResetTrigger(deathAnimationParameter);
+            
+            // This is the key line to fix your issue:
+            anim.SetBool(idleAnimationParameter, true); 
+            
+            // Force the state machine to jump to "Idle" immediately
+            anim.Play("Idle", 0, 0f); 
+        }
     }
 }

@@ -64,9 +64,8 @@ public class TurnManager : MonoBehaviour
     // Flag to stop turns if someone wins
     private bool isGameOver = false;
 
-    IEnumerator CheckTileEffect(PlayerController player)
+IEnumerator CheckTileEffect(PlayerController player)
     {
-        // Get the tile the player is currently standing on
         Transform tileTransform = board.GetTile(player.currentTileIndex);
         TileScript tileData = tileTransform.GetComponent<TileScript>();
 
@@ -75,34 +74,31 @@ public class TurnManager : MonoBehaviour
             switch (tileData.type)
             {
                 case TileType.Win:
-                    Debug.Log($"<color=green>PLAYER {currentPlayer} WINS!</color>");
+                    Debug.Log($"<color=green>PLAYER WINS!</color>");
                     isGameOver = true;
-                    // TODO: Activate your Win Screen UI GameObject here
                     break;
 
                 case TileType.Trap:
-                    Debug.Log("Oh no! A Trap!");
-                    // Calculate new position (Current - Amount)
+                    Debug.Log("Trap! Moving back.");
                     int trapTarget = player.currentTileIndex - tileData.effectAmount;
                     yield return StartCoroutine(player.SlideToTile(board, trapTarget));
                     break;
 
                 case TileType.Boost:
-                    Debug.Log("Yay! A Boost!");
-                    // Calculate new position (Current + Amount)
+                    Debug.Log("Boost! Moving forward.");
                     int boostTarget = player.currentTileIndex + tileData.effectAmount;
                     yield return StartCoroutine(player.SlideToTile(board, boostTarget));
                     break;
 
                 case TileType.BackToStart:
-                    Debug.Log("Ouch! Back to start!");
-                    yield return StartCoroutine(player.SlideToTile(board, 0));
+                    Debug.Log("DEATH! Respawning...");
+                    // CALL THE NEW DEATH FUNCTION HERE
+                    yield return StartCoroutine(player.DeathAndRespawn(board));
                     break;
 
                 case TileType.Normal:
                 case TileType.Start:
                 default:
-                    // Do nothing
                     break;
             }
         }
