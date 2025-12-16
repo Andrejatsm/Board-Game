@@ -4,7 +4,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
-    public SaveLoadScript saveLoadScript;
+    // REMOVED: public SaveLoadScript saveLoadScript; (This caused the error)
+
     public FadeScript fadeScript;
 
     public void CloseGame()
@@ -16,11 +17,11 @@ public class SceneChanger : MonoBehaviour
     {
         if (string.Equals(command, "quit", System.StringComparison.OrdinalIgnoreCase))
         {
-            // Make sure fade works even if timeScale is 0 (FadeScript should use unscaled time).
             if (fadeScript != null) yield return fadeScript.FadeOut(0.1f);
-            // Restore timescale so editor/build isn't stuck
+
             Time.timeScale = 1f;
 
+            // This resets the session data (like player count) so next time it starts fresh
             PlayerPrefs.DeleteAll();
 
 #if UNITY_EDITOR
@@ -33,17 +34,17 @@ public class SceneChanger : MonoBehaviour
         {
             if (fadeScript != null) yield return fadeScript.FadeOut(0.1f);
 
-            // Ensure game time is normal before loading
             Time.timeScale = 1f;
 
-            if (saveLoadScript != null) saveLoadScript.SaveGame(characterIndex, characterName);
+            // REMOVED: saveLoadScript.SaveGame(...) 
+            // We deleted this line because ChooseCharacterScript already saved the data to PlayerPrefs!
+
             SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
         else if (string.Equals(command, "menu", System.StringComparison.OrdinalIgnoreCase))
         {
             if (fadeScript != null) yield return fadeScript.FadeOut(0.1f);
 
-            // Restore timescale before switching to menu
             Time.timeScale = 1f;
 
             SceneManager.LoadScene(0, LoadSceneMode.Single);
@@ -53,11 +54,5 @@ public class SceneChanger : MonoBehaviour
     public void GoToMenu()
     {
         StartCoroutine(Delay("menu", -1, ""));
-    }
-
-    IEnumerator Quit()
-    {
-        yield return new WaitForSeconds(0.8f);
-        Application.Quit();
     }
 }

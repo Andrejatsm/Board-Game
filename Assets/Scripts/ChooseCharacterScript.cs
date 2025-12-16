@@ -1,34 +1,32 @@
-using JetBrains.Annotations;
 using UnityEngine;
+using TMPro; // Needed for InputField
 
 public class ChooseCharacterScript : MonoBehaviour
 {
     public GameObject[] characters;
-    int characterIndex;
-
-    public GameObject inputField;
-    string characterName;
-    public int playerCount = 2;
+    public TMP_InputField inputField;
     public SceneChanger sceneChanger;
-    public SaveLoadScript saveLoadScript;
+
+    // We removed 'playerCount' here so it doesn't overwrite your 2/3/4 player buttons.
+
+    int characterIndex = 0;
 
     private void Awake()
     {
         characterIndex = 0;
+        // Hide all characters, show the first one
         foreach (GameObject character in characters)
         {
             character.SetActive(false);
         }
+        if (characters.Length > 0) characters[0].SetActive(true);
     }
+
     public void NextCharacter()
     {
         characters[characterIndex].SetActive(false);
         characterIndex++;
-
-        if (characterIndex == characters.Length)
-        {
-            characterIndex = 0;
-        }
+        if (characterIndex >= characters.Length) characterIndex = 0;
         characters[characterIndex].SetActive(true);
     }
 
@@ -36,27 +34,32 @@ public class ChooseCharacterScript : MonoBehaviour
     {
         characters[characterIndex].SetActive(false);
         characterIndex--;
-
-        if (characterIndex == -1)
-        {
-            characterIndex = characters.Length - 1;
-        }
+        if (characterIndex < 0) characterIndex = characters.Length - 1;
         characters[characterIndex].SetActive(true);
     }
 
     public void Play()
     {
-        characterName = inputField.GetComponent<TMPro.TMP_InputField>().text;
+        string nameToSave = inputField.text;
 
-        if (characterName.Length > 3)
+        // FIX 1: Allow short names (Your old code required > 3 letters, so "Bob" failed)
+        if (nameToSave.Length > 0)
         {
+            // FIX 2: Save the data explicitly
             PlayerPrefs.SetInt("SelectedCharacter", characterIndex);
-            PlayerPrefs.SetString("PlayerName", characterName);
-            PlayerPrefs.SetInt("PlayerCount", playerCount);
-            StartCoroutine(sceneChanger.Delay("play", characterIndex, characterName));
-        }else
+            PlayerPrefs.SetString("PlayerName", nameToSave);
+
+            // Force Unity to write this to disk immediately
+            PlayerPrefs.Save();
+
+            // Trigger your SceneChanger
+            // (Keeping "play" assuming that is your animation trigger name)
+            StartCoroutine(sceneChanger.Delay("play", characterIndex, nameToSave));
+        }
+        else
         {
-            inputField.GetComponent<TMPro.TMP_InputField>().Select();
+            // If they didn't type a name, select the box so they know to type
+            inputField.Select();
         }
     }
 }

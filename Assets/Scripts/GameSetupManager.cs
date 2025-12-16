@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class GameSetupManager : MonoBehaviour
@@ -8,9 +8,7 @@ public class GameSetupManager : MonoBehaviour
     public Transform spawnPoint;
 
     [Header("Adjustments")]
-    [Tooltip("Size of the player (0.5 = 50% size)")]
     public float playerScale = 0.5f;
-    [Tooltip("How high to lift player so feet aren't in ground")]
     public float heightOffset = 0.5f;
 
     [Header("File IO")]
@@ -18,59 +16,65 @@ public class GameSetupManager : MonoBehaviour
 
     void Start()
     {
+        // --- 1. THE GHOST HUNTER ---
+        // This checks if another script ran before us and created players.
+        var existingPlayers = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        if (existingPlayers.Length > 0)
+        {
+            Debug.LogError("⚠️ GHOSTS DETECTED! Found " + existingPlayers.Length + " players already in the scene. Destroying them...");
+            foreach (var p in existingPlayers)
+            {
+                Destroy(p.gameObject);
+            }
+        }
+
+        Debug.Log(">>> GAME SETUP STARTED ON: " + gameObject.name);
+
         List<PlayerController> activePlayers = new List<PlayerController>();
 
-        // --- 1. SPAWN MAIN PLAYER ---
+        // --- 2. CHECK THE NAME ---
+        string savedName = PlayerPrefs.GetString("PlayerName", "Player");
+        Debug.Log(">>> ATTEMPTING TO SPAWN HUMAN WITH NAME: " + savedName);
+
+        // If this prints "Hjustons" or a random name, your Main Menu is saving wrong.
+        // If this prints "Player", your Main Menu isn't saving at all.
+        // If this prints your name (e.g. "Jeff"), but you SEE "Hjustons", you have a Ghost Script running AFTER this one.
+
+        // --- 3. SPAWN HUMAN ---
         int characterIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);
         if (characterIndex >= playerPrefabs.Length) characterIndex = 0;
 
-        // Calculate spawn position with the Height Offset
         Vector3 startPos = spawnPoint.position + (Vector3.up * heightOffset);
-
         GameObject mainCharObj = Instantiate(playerPrefabs[characterIndex], startPos, Quaternion.identity);
-
-        // APPLY SCALING
         mainCharObj.transform.localScale = Vector3.one * playerScale;
 
-        // Set Name & Add to list
-        mainCharObj.GetComponent<NameScript>().SetName(PlayerPrefs.GetString("PlayerName", "Player"));
+        mainCharObj.GetComponent<NameScript>().SetName(savedName);
         activePlayers.Add(mainCharObj.GetComponent<PlayerController>());
 
-
-        // --- 2. SPAWN OTHER PLAYERS (BOTS) ---
-        int playerCount = PlayerPrefs.GetInt("PlayerCount", 1);
+        // --- 4. SPAWN BOTS ---
+        int totalPlayers = PlayerPrefs.GetInt("PlayerCount", 2);
         string[] nameArray = ReadLinesFromFile(textFileName);
 
-        for (int i = 0; i < playerCount - 1; i++)
+        for (int i = 0; i < totalPlayers - 1; i++)
         {
-            // Move spawn point to the right for the next player
             spawnPoint.position += new Vector3(1.2f, 0, 0.08f);
-
-            // Calculate new position with Height Offset
-            Vector3 botPos = spawnPoint.position + (Vector3.up * heightOffset);
-
             int randomIndex = Random.Range(0, playerPrefabs.Length);
-            GameObject otherObj = Instantiate(playerPrefabs[randomIndex], botPos, Quaternion.identity);
 
-            // APPLY SCALING
-            otherObj.transform.localScale = Vector3.one * playerScale;
+            GameObject botObj = Instantiate(playerPrefabs[randomIndex], spawnPoint.position + (Vector3.up * heightOffset), Quaternion.identity);
+            botObj.transform.localScale = Vector3.one * playerScale;
 
-            // Set Name & Add to list
-            if (nameArray.Length > 0)
-                otherObj.GetComponent<NameScript>().SetName(nameArray[Random.Range(0, nameArray.Length)]);
+            string randomName = "Bot " + (i + 1);
+            if (nameArray.Length > 0) randomName = nameArray[Random.Range(0, nameArray.Length)];
 
-            activePlayers.Add(otherObj.GetComponent<PlayerController>());
+            botObj.GetComponent<NameScript>().SetName(randomName);
+            activePlayers.Add(botObj.GetComponent<PlayerController>());
         }
 
-        // --- 3. CONNECT TO TURN MANAGER ---
+        // --- 5. INITIALIZE TURN MANAGER ---
         TurnManager turnManager = FindFirstObjectByType<TurnManager>();
         if (turnManager != null)
         {
             turnManager.InitializePlayers(activePlayers.ToArray());
-        }
-        else
-        {
-            Debug.LogError("TurnManager not found in scene!");
         }
     }
 
@@ -78,9 +82,7 @@ public class GameSetupManager : MonoBehaviour
     {
         TextAsset textAsset = Resources.Load<TextAsset>(fileName);
         if (textAsset != null)
-        {
             return textAsset.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
-        }
         return new string[0];
     }
 }

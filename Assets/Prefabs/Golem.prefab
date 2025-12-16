@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 1338388342630090808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 873.71924, y: 420.7169, z: 611.5349}
+  m_LocalPosition: {x: 799.28827, y: 420.51425, z: 570.02484}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -125,6 +125,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02c9bbbf9d36f01429349add108af399, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nameText: {fileID: 1108535640464193939}
+  playerName: 
 --- !u!114 &-2349793146676365693
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,6 +144,7 @@ MonoBehaviour:
   heightOffset: 2
   moveAnimationParameter: Walk
   deathAnimationParameter: Die
+  idleAnimationParameter: Idle
 --- !u!1 &6210369990037692746
 GameObject:
   m_ObjectHideFlags: 0

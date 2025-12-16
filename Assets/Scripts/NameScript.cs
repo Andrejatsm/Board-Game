@@ -1,18 +1,21 @@
-using TMPro;
 using UnityEngine;
+using TMPro; // 1. CHANGE THIS LINE (was using UnityEngine.UI;)
 
 public class NameScript : MonoBehaviour
 {
-    TextMeshPro TMP;
+    // 2. CHANGE THE TYPE HERE
+    // Was 'public Text nameText;'
+    public TextMeshPro nameText;
 
-    void Awake()
-    {
-        TMP = transform.Find("NameField").gameObject.GetComponent<TextMeshPro>();
-    }
+    public string playerName;
 
     public void SetName(string name)
     {
-        TMP.text = name;
-            TMP.color = new Color32((byte)Random.Range(0, 255), (byte)Random.Range(0, 255), (byte)Random.Range(0, 255), 255);
+        playerName = name;
+
+        if (nameText != null)
+        {
+            nameText.text = name;
+        }
     }
 }
